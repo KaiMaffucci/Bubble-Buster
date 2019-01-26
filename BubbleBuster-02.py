@@ -42,7 +42,7 @@ def move_ship(event):
         window.destroy()
 c.bind_all("<Key>", move_ship) #tells the program to run this whenever a key is pressed
 
-#bubbles
+#bubbles variables
 bub_id = list()
 bub_r = list()
 bub_speed = list()
@@ -50,11 +50,33 @@ min_bub_r = 10
 max_bub_r = 30
 max_bub_spd = 10
 gap = 100
+
+#function to create a bubble
 def create_bubble():
+    global level
     x = WIDTH + gap
     y = randint(0, HEIGHT)
     r = randint(min_bub_r, max_bub_r)
-    id1 = c.create_oval(x - r, y - r, x + r, y + r, outline = "white")
+    if level == 1:
+        bub_color = "white"
+    elif level == 2:
+        bub_color = "grey"
+    elif level == 3:
+        bub_colors = ["green", "brown", "yellow"]
+        bub_color = bub_colors[randint(0, 2)]
+    elif level == 4:
+        bub_colors = ["red", "black", "grey"]
+        bub_color = bub_colors[randint(0, 2)]
+    elif level == 5:
+        bub_colors = ["pink", "purple", "red"]
+        bub_color = bub_colors[randint(0, 2)]
+    elif level == 6:
+        bub_colors = ["red", "orange", "yellow", "green", "cyan", "blue", "purple"]
+        bub_color = bub_colors[randint(0, 6)]
+    else:
+        c.configure(background='black')
+        bub_color = "red"
+    id1 = c.create_oval(x - r, y - r, x + r, y + r, outline = bub_color)
     bub_id.append(id1)
     bub_r.append(r)
     bub_speed.append(randint(1, max_bub_spd))
@@ -111,19 +133,22 @@ def show_score(score):
 def show_time(time_left):
     c.itemconfig(time_text, text = str(time_left))
 
-bub_chance = 5
+#misc. variable setup
+bub_chance = 6
 time_limit = 30
 score = 0
 level_score = 0
 level = 1
-end = time() + time_limit + 4
+time_passed = 0.0
 playing = True
+
 #level one message
 level_text = c.create_text(mid_x, mid_y, text = "LEVEL 1", fill = "white", font = ("helvetica", 30))
 window.update()
 sleep(3)
 c.delete(level_text)
 window.update()
+
 #main game loop
 while playing == True:
     #generates bubble at random
@@ -135,28 +160,31 @@ while playing == True:
     points_from_collision = collision()
     score += points_from_collision
     level_score += points_from_collision
+
+    #display score and time
+    show_score(score)
+    show_time(int(31 - time_passed))
+    window.update() #show everything thats added to canvas
+    sleep(0.01) #delay so you have time
+    time_passed += 0.01
+
     #if they get to next level do stuff
-    if level_score > 1000:
+    if level_score >= 1000:
         for i in range(len(bub_id) - 1, -1, -1):
             del_bubble(i)
         level_score = 0
         level += 1
-        end = time() + time_limit + 4
+        time_passed = 0
         bub_chance += 1
         #next level message
         level_text = c.create_text(mid_x, mid_y, text = "LEVEL " + str(level), fill = "white", font = ("helvetica", 30))
-        show_score(score)
         window.update()
         sleep(3)
         c.delete(level_text)
         window.update()
-    #display score and time
-    show_score(score)
-    show_time(int(end - time()))
-    window.update() #show everything thats added to canvas
-    sleep(0.01) #delay so you have time
+
     #if they lose, game over screen
-    if time() > end:
+    if time_passed >= time_limit:
         c.create_text(mid_x, mid_y, text = "GAME OVER", fill = "white", font = ("helvetica", 30))
         c.create_text(mid_x, mid_y + 30, text = "Score: " + str(score), fill = "white")
         window.update()
